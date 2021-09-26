@@ -4,13 +4,12 @@
 from mypylib.mypylib import *
 from mypyconsole.mypyconsole import *
 from mytoncore import *
-import sys, getopt, os
 
 local = MyPyClass(__file__)
 console = MyPyConsole()
 ton = MyTonCore()
 
-def Init(argv):
+def Init():
 	# Load translate table
 	local.InitTranslator(local.buffer.get("myDir") + "translate.json")
 
@@ -70,34 +69,8 @@ def Init(argv):
 	# console.AddItem("pt", PrintTest, "PrintTest")
 
 	console.AddItem("hr", GetHashrate, local.Translate("hr_cmd"))
-	console.AddItem("emi", EstimateMiningIncome, local.Translate("emi_cmd"))
 	console.AddItem("mon", EnableMining, local.Translate("mo_cmd"))
 	console.AddItem("moff", DisableMining, local.Translate("moff_cmd"))
-
-	# Process input parameters
-	opts, args = getopt.getopt(argv,"hc:w:",["config=","wallets="])
-	for opt, arg in opts:
-		if opt == '-h':
-			print ('mytonctrl.py -c <configfile> -w <wallets>')
-			sys.exit()
-		elif opt in ("-c", "--config"):
-			configfile = arg
-			if not os.access(configfile, os.R_OK):
-				print ("Configuration file " + configfile + " could not be opened")
-				sys.exit()
-
-			ton.dbFile = configfile
-			ton.Refresh()
-		elif opt in ("-w", "--wallets"):
-			wallets = arg
-			if not os.access(wallets, os.R_OK):
-				print ("Wallets path " + wallets  + " could not be opened")
-				sys.exit()
-			elif not os.path.isdir(wallets):
-				print ("Wallets path " + wallets  + " is not a directory")
-				sys.exit()
-			ton.walletsDir = wallets
-	#end for
 
 	local.db["config"]["logLevel"] = "debug"
 	local.db["config"]["isLocaldbSaving"] = True
@@ -891,7 +864,7 @@ def VoteElectionEntry(args):
 	if ton.validatorWalletName is None:
 		ColorPrint("{red}You are not a validator, or this utility is not configured correctly.{endc}")
 	ton.ReturnStake()
-	ton.ElectionEntry(args)
+	ton.ElectionEntry()
 	ColorPrint("VoteElectionEntry - {green}OK{endc}")
 #end define
 
@@ -981,11 +954,6 @@ def GetHashrate(args):
 	ColorPrint(result)
 #end define
 
-def EstimateMiningIncome(args):
-	ColorPrint("The data may be incorrect if mining is enabled during the test. Turn off mining before checking hashrate.")
-	ColorPrint(ton.EstimateMiningIncome())
-#end define
-
 def EnableMining(args):
 	powAddr = ton.GetSettings('powAddr')
 	minerAddr = ton.GetSettings('minerAddr')
@@ -1018,6 +986,6 @@ def DisableMining(args):
 ###
 
 if __name__ == "__main__":
-	Init(sys.argv[1:])
+	Init()
 	console.Run()
 #end if
